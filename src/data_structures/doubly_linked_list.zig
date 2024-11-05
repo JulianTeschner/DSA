@@ -98,6 +98,7 @@ fn DoublyLinkedListType(comptime T: type) type {
                 nextNode.prev = node;
                 node.prev = prevNode;
                 node.next = nextNode;
+                self.len += 1;
             }
         }
 
