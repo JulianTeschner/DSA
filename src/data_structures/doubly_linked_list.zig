@@ -108,17 +108,25 @@ fn DoublyLinkedListType(comptime T: type) type {
         }
 
         fn removeAt(self: *DoublyLinkedList, index: usize) DoublyLinkedListError!T {
+            std.debug.print("Remove At: {}\n", .{index});
             if (index + 1 > self.len) {
                 return DoublyLinkedListError.IndexOutOfBounds;
             } else {
                 var node = self.head.?;
-                for (0..index) |_| {
-                    node = node.next.?;
+                if (index == 0) {
+                    self.head = node.next;
+                } else if (index == self.len - 1) {
+                    node = self.tail.?;
+                    self.tail = node.prev;
+                } else {
+                    for (0..index) |_| {
+                        node = node.next.?;
+                    }
+                    var prev = node.prev;
+                    var next = node.next;
+                    prev.?.next = next;
+                    next.?.prev = prev;
                 }
-                var prev = node.prev;
-                var next = node.next;
-                prev.next = next;
-                next.prev = prev;
                 const val = node.value;
                 self.allocator.destroy(node);
                 self.len -= 1;
@@ -151,26 +159,22 @@ test "doubly linked list" {
     try list.append(11);
     try std.testing.expectEqual(9, try list.removeAt(1));
     try std.testing.expectError(DoublyLinkedListError.ValueDoesNotExist, list.remove(9));
-    std.debug.print("{}\n", .{list.head.?.value});
-    std.debug.print("{}\n", .{list.tail.?.value});
-    // try std.testing.expectEqual(5, try list.removeAt(0));
-    // try std.testing.expectEqual(11, try list.removeAt(0));
-    // try std.testing.expectEqual(0, list.len);
+    try std.testing.expectEqual(5, try list.removeAt(0));
+    try std.testing.expectEqual(11, try list.removeAt(0));
+    try std.testing.expectEqual(0, list.len);
+    try list.prepend(5);
+    try list.prepend(7);
+    try list.prepend(9);
+    try std.testing.expectEqual(5, try list.get(2));
+    try std.testing.expectEqual(9, try list.get(0));
+    try std.testing.expectEqual(9, try list.removeAt(0));
+    try std.testing.expectEqual(2, list.len);
+    try std.testing.expectEqual(7, try list.get(0));
+
+    try std.testing.expectEqual(7, try list.removeAt(0));
+    try std.testing.expectEqual(1, list.len);
+    try std.testing.expectEqual(5, try list.removeAt(0));
+    try std.testing.expectEqual(0, list.len);
 
     list.deinit();
 }
-
-//
-// expect(list.removeAt(0)).toEqual(5);
-// expect(list.removeAt(0)).toEqual(11);
-// expect(list.length).toEqual(0);
-//
-// list.prepend(5);
-// list.prepend(7);
-// list.prepend(9);
-//
-// expect(list.get(2)).toEqual(5);
-// expect(list.get(0)).toEqual(9);
-// expect(list.remove(9)).toEqual(9);
-// expect(list.length).toEqual(2);
-// expect(list.get(0)).toEqual(7);
