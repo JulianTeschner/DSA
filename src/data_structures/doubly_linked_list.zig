@@ -79,6 +79,28 @@ fn DoublyLinkedListType(comptime T: type) type {
             self.len += 1;
         }
 
+        fn insertAt(self: *DoublyLinkedList, value: T, index: usize) DoublyLinkedListError!void {
+            if (index > self.len) {
+                return DoublyLinkedListError.IndexOutOfBounds;
+            } else if (index == self.len) {
+                return append(value);
+            } else if (index == 0) {
+                return prepend(value);
+            } else {
+                var node = try self.allocator.create(NodeType(T));
+                node.* = NodeType(T).init(value);
+                var prevNode = self.head.?;
+                for (0..index - 1) |_| {
+                    prevNode = prevNode.next.?;
+                }
+                var nextNode = prevNode.next.?;
+                prevNode.next = node;
+                nextNode.prev = node;
+                node.prev = prevNode;
+                node.next = nextNode;
+            }
+        }
+
         fn get(self: *DoublyLinkedList, index: usize) DoublyLinkedListError!T {
             if (index + 1 > self.len) {
                 return DoublyLinkedListError.IndexOutOfBounds;
