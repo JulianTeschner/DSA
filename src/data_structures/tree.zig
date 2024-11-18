@@ -4,6 +4,15 @@
 const std = @import("std");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
+const DoublyLinkedList = std.DoublyLinkedList;
+
+fn keepOrder(context: void, a: u8, b: u8) std.math.Order {
+    _ = context;
+    _ = a;
+    _ = b;
+
+    return std.math.Order.eq;
+}
 
 fn Tree(comptime T: type) type {
     return struct {
@@ -102,8 +111,34 @@ fn Tree(comptime T: type) type {
                 return;
             }
         }
+
         fn postOrderSearch(node: ?*Node, path: *std.ArrayList(T)) !void {
             try walkPostOrder(node, path);
+        }
+
+        fn breadthFirstSearch(node: ?*Node, path: *std.ArrayList(T)) !void {
+            const allocator = std.testing.allocator;
+            const List = std.DoublyLinkedList(*Tree(T).Node);
+            var queue = List{};
+            const ln = try allocator.create(List.Node);
+            // defer allocator.destroy(ln);
+            ln.* = List.Node{ .data = node.? };
+            queue.append(ln);
+            while (queue.len > 0) {
+                const val = queue.pop();
+                try path.append(val.?.data.value);
+                if (val.?.data.left) |left| {
+                    const l = try allocator.create(List.Node);
+                    l.* = List.Node{ .data = left };
+                    queue.prepend(l);
+                }
+                if (val.?.data.right) |right| {
+                    const l = try allocator.create(List.Node);
+                    l.* = List.Node{ .data = right };
+                    queue.prepend(l);
+                }
+                allocator.destroy(val.?);
+            }
         }
     };
 }
@@ -118,6 +153,11 @@ test "tree" {
     var path1 = std.ArrayList(u32).init(allocator);
     var path2 = std.ArrayList(u32).init(allocator);
     var path3 = std.ArrayList(u32).init(allocator);
+    var path4 = std.ArrayList(u32).init(allocator);
+    defer path1.deinit();
+    defer path2.deinit();
+    defer path3.deinit();
+    defer path4.deinit();
 
     var node0 = T.Node{ .value = 0, .left = null, .right = null };
     var node1 = T.Node{ .value = 1, .left = null, .right = null };
@@ -163,7 +203,10 @@ test "tree" {
         std.debug.print("{}\n", .{p});
     }
     std.debug.print("\n", .{});
-    path1.deinit();
-    path2.deinit();
-    path3.deinit();
+
+    try T.breadthFirstSearch(tree.head, &path4);
+    for (path4.items) |p| {
+        std.debug.print("{}\n", .{p});
+    }
+    std.debug.print("\n", .{});
 }
