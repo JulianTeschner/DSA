@@ -99,6 +99,22 @@ fn Tree(comptime T: type) type {
                 allocator.destroy(val.?);
             }
         }
+        fn compare(self: *Tree(T), node: ?*Node) !bool {
+            const allocator = std.testing.allocator;
+            var path1 = std.ArrayList(u32).init(allocator);
+            var path2 = std.ArrayList(u32).init(allocator);
+            try preOrderSearch(self.head.?, &path1);
+            try preOrderSearch(node.?, &path2);
+            const path1_slice = try path1.toOwnedSlice();
+            const path2_slice = try path2.toOwnedSlice();
+            defer allocator.free(path1_slice);
+            defer allocator.free(path2_slice);
+            if (std.mem.eql(u32, path1_slice, path2_slice)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     };
 }
 
@@ -158,4 +174,7 @@ test "tree" {
         std.debug.print("{}\n", .{p});
     }
     std.debug.print("\n", .{});
+
+    const res = try tree.compare(&node0);
+    try std.testing.expectEqual(true, res);
 }
