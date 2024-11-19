@@ -6,14 +6,6 @@ const testing = std.testing;
 const Allocator = std.mem.Allocator;
 const DoublyLinkedList = std.DoublyLinkedList;
 
-fn keepOrder(context: void, a: u8, b: u8) std.math.Order {
-    _ = context;
-    _ = a;
-    _ = b;
-
-    return std.math.Order.eq;
-}
-
 fn Tree(comptime T: type) type {
     return struct {
         const Self = @This();
@@ -33,39 +25,6 @@ fn Tree(comptime T: type) type {
                 .size = 1,
             };
         }
-        ////////////////////////////////
-        // IS THIS PRETTIER OR NOT??? //
-        ////////////////////////////////
-        //
-        // fn preOrder(node: *Node, comptime func: *const fn (type, *Tree(T).Node) void) void {
-        //     func(T, node);
-        //     if (node.left) |left| {
-        //         preOrder(left, func);
-        //     }
-        //     if (node.right) |right| {
-        //         preOrder(right, func);
-        //     }
-        // }
-        //
-        // fn inOrder(node: *Node, comptime func: *const fn (type, *Tree(T).Node) void) void {
-        //     if (node.left) |left| {
-        //         inOrder(left, func);
-        //     }
-        //     func(T, node);
-        //     if (node.right) |right| {
-        //         inOrder(right, func);
-        //     }
-        // }
-        //
-        // fn postOrder(node: *Node, comptime func: *const fn (type, *Tree(T).Node) void) void {
-        //     if (node.left) |left| {
-        //         postOrder(left, func);
-        //     }
-        //     if (node.right) |right| {
-        //         postOrder(right, func);
-        //     }
-        //     func(T, node);
-        // }
 
         fn walkPreOrder(curr: ?*Node, path: *std.ArrayList(T)) !void {
             if (curr) |c| {
@@ -143,10 +102,6 @@ fn Tree(comptime T: type) type {
     };
 }
 
-fn printNode(comptime T: type, node: *Tree(T).Node) void {
-    std.debug.print("{}\n", .{node.value});
-}
-
 test "tree" {
     const T = Tree(u32);
     const allocator = std.testing.allocator;
@@ -179,12 +134,6 @@ test "tree" {
 
     tree.head.?.right.?.right.?.left = &node7;
     tree.head.?.right.?.right.?.right = &node8;
-    // T.preOrder(tree.head.?, printNode);
-    // std.debug.print("\n", .{});
-    // T.inOrder(tree.head.?, printNode);
-    // std.debug.print("\n", .{});
-    // T.postOrder(tree.head.?, printNode);
-    // std.debug.print("\n", .{});
 
     try T.preOrderSearch(tree.head, &path1);
     for (path1.items) |p| {
